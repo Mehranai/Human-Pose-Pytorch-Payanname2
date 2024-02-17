@@ -130,7 +130,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
       pose = [item.to(device) for item in pose]
 
       output = model(data, bbox_human, box, pose)
-      loss = loss_fn(output.reshape(1, -1), lebl)
+      loss = loss_fn(output.unsqueeze(0), lebl)
       loss.backward()
 
       optimizer.step()
@@ -143,7 +143,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
 
   scheduler.step()
   accuracy = metric.compute()
-  print(f'Train Accuracy {accuracy}, LR={scheduler.get_last_lr()}\n')
+  print(f'Train Accuracy {accuracy:.2f}, LR={scheduler.get_last_lr():.2f}\n')
 
   #Valid Section
   valid_loss = AverageMeter()
