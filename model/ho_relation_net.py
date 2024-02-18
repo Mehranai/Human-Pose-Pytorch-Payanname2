@@ -30,15 +30,18 @@ class HORelationNet(nn.Module):
         self._max_batch = 1  # currently only support batch size = 1
         self.fc = nn.Sequential(
             nn.LazyLinear(1024),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(0.2)
         )
         self.fc_ctx = nn.Sequential(
             nn.LazyLinear(1024),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(0.2)
         )
         self.fc_pose = nn.Sequential(
             nn.LazyLinear(1024),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(0.2)
         )
         self.class_predictor = nn.LazyLinear(self.num_class)
         self.ctx_class_predictor = nn.LazyLinear(self.num_class)
