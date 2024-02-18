@@ -199,7 +199,7 @@ if __name__ == '__main__':
 
     net = horelation_resnet50_v1d_st40()
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters(), lr=lr, weight_decay=5e-4)
+    optimizer = optim.SGD(net.parameters(), lr=lr, weight_decay=5e-4, momentum=0.9)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
     metric = tm.Accuracy(task="multiclass", num_classes=40).to(device)
 
