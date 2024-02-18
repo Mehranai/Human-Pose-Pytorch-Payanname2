@@ -86,23 +86,23 @@ class Stanford40Action(Dataset):
         #     img = self.transform(img)
 
         if self.transform is not None:
-            if self._split == 'test':
+            if self._split == 'train':
                 self.my_transform = A.Compose(
                     [A.Resize(300, 300),
                      A.RandomBrightnessContrast(p=0.3),
                      A.SafeRotate(15, p=0.3),
                      A.HorizontalFlip(p=0.3),
                      A.ColorJitter(brightness=0.3, p=0.3),
-                     ToTensorV2(),
-                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                     ToTensorV2()
                      ],
                     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
                 )
             else:
                 self.my_transform = A.Compose(
                     [A.Resize(300, 300),
-                     ToTensorV2(),
-                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                     ToTensorV2()
                      ],
                     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
                 )
@@ -143,15 +143,15 @@ class Stanford40Action(Dataset):
 
                 _, img_width, img_hight = img.shape
 
-                box_t = self.normalize_bbox(box_t, img_width, img_hight)
-                hbox_t = self.normalize_bbox(hbox_t, img_width, img_hight)
-                pose_t = self.normalize_bbox(pose_t, img_width, img_hight)
+                # box_t = self.normalize_bbox(box_t, img_width, img_hight)
+                # hbox_t = self.normalize_bbox(hbox_t, img_width, img_hight)
+                # pose_t = self.normalize_bbox(pose_t, img_width, img_hight)
 
                 box = torch.tensor(box_t, dtype=torch.float32)
-                hbox = torch.tensor(hbox_t, dtype=torch.float32)
+                h_box = torch.tensor(hbox_t, dtype=torch.float32)
                 pose = torch.tensor(pose_t, dtype=torch.float32)
 
-            return img, label, hbox, box, pose
+            return img, label, h_box, box, pose
         return img, label
 
     def _load_items(self, split):
