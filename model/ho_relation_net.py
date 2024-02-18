@@ -32,17 +32,14 @@ class HORelationNet(nn.Module):
         self.fc = nn.Sequential(
             nn.LazyLinear(1024),
             nn.ReLU(),
-            nn.Dropout(0.2)
         )
         self.fc_ctx = nn.Sequential(
             nn.LazyLinear(1024),
             nn.ReLU(),
-            nn.Dropout(0.2)
         )
         self.fc_pose = nn.Sequential(
             nn.LazyLinear(1024),
             nn.ReLU(),
-            nn.Dropout(0.2)
         )
         self.class_predictor = nn.LazyLinear(self.num_class)
         self.ctx_class_predictor = nn.LazyLinear(self.num_class)
@@ -57,21 +54,21 @@ class HORelationNet(nn.Module):
         obj_boxes = obj_boxes[0]
         pose_boxes = pose_boxes[0]
 
-        m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
-        obj_boxes = torch.cat((m, obj_boxes), dim=1)
-
-        zeros_tensor = torch.zeros((1, 1), device=self.device)
-        h_boxes = torch.cat((zeros_tensor, h_boxes), dim=1)
-
-        zeros_pose = torch.zeros((pose_boxes.shape[0], 1), device=self.device)
-        pose_boxes = torch.cat((zeros_pose, pose_boxes), dim=1)
+        # m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
+        # obj_boxes = torch.cat((m, obj_boxes), dim=1)
+        #
+        # zeros_tensor = torch.zeros((1, 1), device=self.device)
+        # h_boxes = torch.cat((zeros_tensor, h_boxes), dim=1)
+        #
+        # zeros_pose = torch.zeros((pose_boxes.shape[0], 1), device=self.device)
+        # pose_boxes = torch.cat((zeros_pose, pose_boxes), dim=1)
 
         intermediate_layer = self.features(x)
 
         # ROI Align for getting best Related features (14, 14)
-        aligned_features_h = self.roi_align(intermediate_layer, h_boxes)
-        aligned_features_o = self.roi_align(intermediate_layer, obj_boxes)
-        aligned_features_p = self.roi_align(intermediate_layer, pose_boxes)
+        aligned_features_h = self.roi_align(intermediate_layer, [h_boxes])
+        aligned_features_o = self.roi_align(intermediate_layer, [obj_boxes])
+        aligned_features_p = self.roi_align(intermediate_layer, [pose_boxes])
 
         # (M, 1024, h, w) -> (M, 2048, h, w)
         top_features_h = self.top_features(aligned_features_h)
@@ -131,7 +128,7 @@ def horelation_resnet50_v1d_st40(pretrained=False, transfer=None, params='', **k
         top_features = model.backbone.body.layer4
 
         w, h = 14, 14
-        roi_align = torchvision.ops.RoIAlign(sampling_ratio=-1, output_size=(w, h), spatial_scale=1.0)
+        roi_align = torchvision.ops.RoIAlign(sampling_ratio=2, output_size=(w, h), spatial_scale=1.0)
         gap_layer = nn.AdaptiveAvgPool2d((1, 1))
 
         return HORelationNet(
