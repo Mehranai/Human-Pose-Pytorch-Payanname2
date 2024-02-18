@@ -57,21 +57,21 @@ class HORelationNet(nn.Module):
         obj_boxes = obj_boxes[0]
         pose_boxes = pose_boxes[0]
 
-        m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
-        obj_boxes = torch.cat((m, obj_boxes), dim=1)
-
-        zeros_tensor = torch.zeros((1, 1), device=self.device)
-        h_boxes = torch.cat((zeros_tensor, h_boxes), dim=1)
-
-        zeros_pose = torch.zeros((pose_boxes.shape[0], 1), device=self.device)
-        pose_boxes = torch.cat((zeros_pose, pose_boxes), dim=1)
+        # m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
+        # obj_boxes = torch.cat((m, obj_boxes), dim=1)
+        #
+        # zeros_tensor = torch.zeros((1, 1), device=self.device)
+        # h_boxes = torch.cat((zeros_tensor, h_boxes), dim=1)
+        #
+        # zeros_pose = torch.zeros((pose_boxes.shape[0], 1), device=self.device)
+        # pose_boxes = torch.cat((zeros_pose, pose_boxes), dim=1)
 
         intermediate_layer = self.features(x)
 
         # ROI Align for getting best Related features (14, 14)
-        aligned_features_h = self.roi_align(intermediate_layer, h_boxes)
-        aligned_features_o = self.roi_align(intermediate_layer, obj_boxes)
-        aligned_features_p = self.roi_align(intermediate_layer, pose_boxes)
+        aligned_features_h = self.roi_align(intermediate_layer, [h_boxes])
+        aligned_features_o = self.roi_align(intermediate_layer, [obj_boxes])
+        aligned_features_p = self.roi_align(intermediate_layer, [pose_boxes])
 
         # (M, 1024, h, w) -> (M, 2048, h, w)
         top_features_h = self.top_features(aligned_features_h)

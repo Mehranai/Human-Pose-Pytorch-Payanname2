@@ -139,7 +139,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
 
   scheduler.step()
   accuracy = metric.compute()
-  print(f'Train Accuracy {accuracy:.2f}, LR={scheduler.get_last_lr():.2f}\n')
+  print(f'Train Accuracy {accuracy}, LR={scheduler.get_last_lr()}\n')
 
   #Valid Section
   valid_loss = AverageMeter()
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 
     net = horelation_resnet50_v1d_st40()
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=lr, weight_decay=5e-4, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=lr, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
     metric = tm.Accuracy(task="multiclass", num_classes=40).to(device)
 

@@ -143,9 +143,9 @@ class Stanford40Action(Dataset):
 
                 _, img_width, img_hight = img.shape
 
-                # box_t = self.normalize_bbox(box_t, img_width, img_hight)
-                # hbox_t = self.normalize_bbox(hbox_t, img_width, img_hight)
-                # pose_t = self.normalize_bbox(pose_t, img_width, img_hight)
+                box_t = self.normalize_bbox(box_t, img_width, img_hight)
+                hbox_t = self.normalize_bbox(hbox_t, img_width, img_hight)
+                pose_t = self.normalize_bbox(pose_t, img_width, img_hight)
 
                 box = torch.tensor(box_t, dtype=torch.float32)
                 h_box = torch.tensor(hbox_t, dtype=torch.float32)
