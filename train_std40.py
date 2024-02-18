@@ -1,5 +1,4 @@
 from utils import AverageMeter
-import numpy as np
 from lib.stanford40_dataset import Stanford40Action
 from model.ho_relation_net import horelation_resnet50_v1d_st40
 
@@ -22,7 +21,7 @@ import pickle
 num_workers = 0
 batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-epochs = 4
+epochs = 20
 lr = 3e-5
 max_lr = 1e-6
 
@@ -52,20 +51,17 @@ def save_best_model(model, output_name, loss, epoch):
     'epoch': epoch,
     'model_state_dict': model.state_dict(),
     'loss': loss
-}, f'/content/best_model/{output_name}.pth')
+}, f'/content/{output_name}.pth')
 
 def get_dataset(dataset):
     train_tranform = transforms.Compose([
-        transforms.Resize((380, 380)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(15),
-        transforms.ColorJitter(brightness=2),
+        transforms.Resize((300, 300)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     test_transform = transforms.Compose([
-        transforms.Resize((380, 380)),
+        transforms.Resize((300, 300)),
         transforms.ToTensor()
     ])
 

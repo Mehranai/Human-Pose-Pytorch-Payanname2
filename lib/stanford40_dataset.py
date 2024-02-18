@@ -88,21 +88,21 @@ class Stanford40Action(Dataset):
         if self.transform is not None:
             if self._split == 'test':
                 self.my_transform = A.Compose(
-                    [A.Resize(320, 320),
+                    [A.Resize(300, 300),
                      A.RandomBrightnessContrast(p=0.3),
                      A.SafeRotate(15, p=0.3),
                      A.HorizontalFlip(p=0.3),
-                     A.ColorJitter(brightness=0.8, p=0.3),
-                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                     ToTensorV2()
+                     A.ColorJitter(brightness=0.3, p=0.3),
+                     ToTensorV2(),
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                      ],
                     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
                 )
             else:
                 self.my_transform = A.Compose(
-                    [A.Resize(320, 320),
-                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                     ToTensorV2()
+                    [A.Resize(300, 300),
+                     ToTensorV2(),
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                      ],
                     bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
                 )
