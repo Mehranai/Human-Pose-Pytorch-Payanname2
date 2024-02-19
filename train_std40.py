@@ -127,10 +127,10 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
 
       output = model(data, bbox_human, box, pose)
       loss = loss_fn(output.unsqueeze(0), lebl)
-      loss.backward()
 
-      optimizer.step()
       optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
 
       metric.update(output.argmax(dim=0).unsqueeze(0), lebl)
       train_loss.update(loss.item(), n=len(lebl))
