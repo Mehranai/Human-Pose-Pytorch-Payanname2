@@ -1,7 +1,9 @@
 from utils import AverageMeter
 from lib.stanford40_dataset import Stanford40Action
 from lib.pascal_voc_dataset import VOCAction
+
 from model.ho_relation_net import horelation_resnet50_v1d_st40
+from model.ho_relation_net import horelation_resnet50_v1d_voc
 
 import time
 import tqdm
@@ -167,7 +169,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
           pose = [item.to(device) for item in pose]
 
           output = model(data, bbox_human, box, pose)
-          loss = loss_fn(output.reshape(1, -1), lebl)
+          loss = loss_fn(output.unsqueeze(0), lebl)
 
           valid_loss.update(loss.item(), n=len(lebl))
           metric.update(output.argmax(dim=0).unsqueeze(0), lebl)
@@ -192,14 +194,16 @@ if __name__ == '__main__':
 
     val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.3, 0.7])
 
-    # # 10 percent of dataset
-    # train_dataset, _ = torch.utils.data.random_split(train_dataset, [0.004, 0.996])
+    # 10 percent of dataset
+    train_dataset, val_dataset, _ = torch.utils.data.random_split(train_dataset, [0.04, 0.02, 0.996])
 
     train_loader = get_dataloader(train_dataset, batch_size= batch_size, num_workers=num_workers)
     valid_loader = get_dataloader(val_dataset, batch_size=batch_size, num_workers=num_workers)
     test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers)
 
-    net = horelation_resnet50_v1d_st40()
+    # net = horelation_resnet50_v1d_st40()
+    net = horelation_resnet50_v1d_voc()
+
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=lr, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)

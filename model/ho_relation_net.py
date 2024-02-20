@@ -7,7 +7,6 @@ import torch.nn as nn
 import torchvision
 
 from model.module import HumanObjectRelationModule
-from lib.stanford40_dataset import Stanford40Action
 
 
 class HORelationNet(nn.Module):
@@ -110,6 +109,8 @@ class HORelationNet(nn.Module):
 def horelation_resnet50_v1d_st40(pretrained=False, transfer=None, params='', **kwargs):
 
     if transfer is None:
+        from lib.stanford40_dataset import Stanford40Action
+
         classes = Stanford40Action.CLASSES
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         # Extract the backbone network (ResNet50)
@@ -134,6 +135,40 @@ def horelation_resnet50_v1d_st40(pretrained=False, transfer=None, params='', **k
         return HORelationNet(
             pretrained=pretrained, features=my_backbone, top_features=top_features,
             classes=classes,transform_layer=transform_layer, gap_layer=gap_layer,
-            roi_align=roi_align, roi_size=(14, 14), stride=16)
+            roi_align=roi_align, roi_size=(w, h), stride=16)
+    else:
+        raise NotImplementedError
+
+
+def horelation_resnet50_v1d_voc(pretrained=False, transfer=None, params='', **kwargs):
+
+    if transfer is None:
+        from lib.pascal_voc_dataset import VOCAction
+
+        classes = VOCAction.CLASSES
+        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+        # Extract the backbone network (ResNet50)
+        backbone = model.backbone.body
+
+        # Extract the layers you need up to 'layer3'
+        layers_to_extract = ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3']
+
+        # Create a custom backbone containing only the required layers
+        my_backbone = nn.Sequential()
+        for name, module in backbone.named_children():
+            if name in layers_to_extract:
+                my_backbone.add_module(name, module)
+
+        transform_layer = model.transform
+        top_features = model.backbone.body.layer4
+
+        w, h = 14, 14
+        roi_align = torchvision.ops.RoIAlign(sampling_ratio=2, output_size=(w, h), spatial_scale=1.0)
+        gap_layer = nn.AdaptiveAvgPool2d((1, 1))
+
+        return HORelationNet(
+            pretrained=pretrained, features=my_backbone, top_features=top_features,
+            classes=classes,transform_layer=transform_layer, gap_layer=gap_layer,
+            roi_align=roi_align, roi_size=(w, h), stride=16)
     else:
         raise NotImplementedError

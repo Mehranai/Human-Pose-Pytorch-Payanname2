@@ -45,7 +45,7 @@ class VOCAction(Dataset):
 
     def __init__(self, root='',
                  split='train', index_map=None, preload_label=True,
-                 augment_box=False, load_box=False, random_cls=False):
+                 augment_box=True, load_box=True, random_cls=False):
         super(VOCAction, self).__init__()
         self.num_class = len(self.CLASSES)
         self._im_shapes = {}
