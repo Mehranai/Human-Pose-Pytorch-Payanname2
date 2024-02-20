@@ -4,6 +4,7 @@ from __future__ import division
 import os
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -11,8 +12,13 @@ except ImportError:
 
 import pickle as pkl
 
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
+
+import cv2
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 
 class VOCAction(Dataset):
     """Pascal VOC2012 Action Dataset.
@@ -40,9 +46,10 @@ class VOCAction(Dataset):
     def __init__(self, root='',
                  split='train', index_map=None, preload_label=True,
                  augment_box=False, load_box=False, random_cls=False):
-        super(VOCAction, self).__init__(root)
+        super(VOCAction, self).__init__()
+        self.num_class = len(self.CLASSES)
         self._im_shapes = {}
-        self._root = os.path.join(os.path.expanduser(root), 'VOC2012')
+        self._root = root
         self._augment_box = augment_box
         self._load_box = load_box
         self._random_cls = random_cls
@@ -85,7 +92,9 @@ class VOCAction(Dataset):
         img_id = self._items[idx]
         img_path = self._image_path.format(img_id)
         label = self._label_cache[idx] if self._label_cache else self._load_label(idx)
+
         img = Image.open(img_path).convert('RGB')
+        img = np.array(img)
 
         if self._random_cls:
             for i, cls in enumerate(label[:, 5:]):
@@ -93,11 +102,65 @@ class VOCAction(Dataset):
                 label[i, 4] = np.random.choice(candidate_cls)
         if self._augment_box:
             h, w, _ = img.shape
-            label = bbox.augment(label, img_w=w, img_h=h, output_num=16)
+            if self._split == 'train':
+                self.my_transform = A.Compose(
+                    [A.Resize(224, 224),
+                     A.RandomBrightnessContrast(p=0.2),
+                     A.SafeRotate(15, p=0.2),
+                     A.HorizontalFlip(p=0.2),
+                     A.ColorJitter(brightness=0.3, p=0.2),
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                     ToTensorV2()
+                     ],
+                    bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
+                )
+            else:
+                self.my_transform = A.Compose(
+                    [A.Resize(224, 224),
+                     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                     ToTensorV2()
+                     ],
+                    bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
+                )
         if self._load_box:
             box_path = self._box_path.format(img_id)
             with open(box_path, 'rb') as f:
                 box = pkl.load(f)
+                box = torch.tensor(box, dtype=torch.float32)
+
+            label = torch.tensor(label, dtype=torch.int32)
+            h_box = label[0][:4]
+
+            if self._augment_box:
+                box_hbox_pose = torch.concatenate((box, h_box.reshape(1, -1)), dim=0)
+                # box_hbox_pose = torch.concatenate((box_hbox, pose), dim=0)
+                labels = np.ones_like(box_hbox_pose[:, 0])
+
+                corrected_bboxes = [self.correct_bbox_order(self.correct_bbox_coordinates(bbox, img)) for bbox in box_hbox_pose]
+
+                transformed = self.my_transform(image=img, bboxes=corrected_bboxes, labels=labels)
+
+                img = transformed['image']
+                box_t = transformed['bboxes'][:len(box)]
+                hbox_t = transformed['bboxes'][len(box):len(box)+1]
+                pose_t = transformed['bboxes'][len(box) + 1:]
+
+                # self.visualize(img, box_t)
+                # self.visualize(img, hbox_t)
+
+                _, img_width, img_height = img.shape
+
+                box_t = self.normalize_bbox(box_t, img_width, img_height)
+                hbox_t = self.normalize_bbox(hbox_t, img_width, img_height)
+                pose_t = self.normalize_bbox(pose_t, img_width, img_height)
+
+                box = torch.tensor(box_t, dtype=torch.float32)
+                h_box = torch.tensor(hbox_t, dtype=torch.float32)
+                pose = torch.tensor(pose_t, dtype=torch.float32)
+
+            return img, label, h_box, box, pose
+
+
             return img, label, box
         return img, label
 
@@ -164,3 +227,53 @@ class VOCAction(Dataset):
         """Preload all labels into memory."""
         logging.debug("Preloading %s labels into memory...", str(self))
         return [self._load_label(idx) for idx in range(len(self))]
+
+    def correct_bbox_order(self, bbox):
+        x_min, y_min, x_max, y_max = bbox
+        if x_max < x_min:
+            x_min, x_max = x_max, x_min  # Swap x_min and x_max
+        elif x_max == x_min:
+            x_min -= 1
+
+        if y_max < y_min:
+            y_min, y_max = y_max, y_min  # Swap y_min and y_max
+        elif y_max == y_min:
+            y_min -= 1
+
+        return x_min, y_min, x_max, y_max
+
+    def correct_bbox_coordinates(self, bbox, image):
+        x_min, y_min, x_max, y_max = bbox
+        image_y, image_x, _ = image.shape
+
+        if x_max > image_x:
+            x_max = image_x
+        if y_max > image_y:
+            y_max = image_y
+
+        return x_min, y_min, x_max, y_max
+
+    def visualize(self, image, bboxes):
+        img = image.copy()
+        for bbox in bboxes:
+            img = self.visualize_bbox(img, bbox)
+        plt.figure(figsize=(12, 12))
+        plt.axis('off')
+        plt.imshow(img)
+        plt.show()
+
+    def visualize_bbox(self, img, bbox, color=(255, 0, 0), thickness=2):
+        """Visualizes a single bounding box on the image"""
+        x_min, y_min, x_max, y_max = np.array(bbox)
+
+        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=color, thickness=thickness)
+        return img
+
+    def normalize_bbox(self, bbox, width, height):
+        """Normalize bounding box coordinates."""
+        box_list= []
+        for box in bbox:
+            x1, y1, x2, y2 = box
+            n_box = [x1 / width, y1 / height, x2 / width, y2 / height]
+            box_list.append(n_box)
+        return box_list

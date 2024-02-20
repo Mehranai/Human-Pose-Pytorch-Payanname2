@@ -80,8 +80,7 @@ class Stanford40Action(Dataset):
         img_id = self._items[idx]
         img_path = self._image_path.format(img_id)
         label = self._label_cache[idx] if self._label_cache else self._load_label(idx)
-        img = Image.open(img_path).convert('RGB')
-
+        img = np.array(Image.open(img_path).convert('RGB'))
         # if self.transform is not None:
         #     img = self.transform(img)
 
@@ -123,7 +122,6 @@ class Stanford40Action(Dataset):
             h_box = label[0][:4]
 
             if self._augment_box:
-                img = np.array(img)
 
                 box_hbox = torch.concatenate((box, h_box.reshape(1, -1)), dim=0)
                 box_hbox_pose = torch.concatenate((box_hbox, pose), dim=0)
@@ -233,7 +231,6 @@ class Stanford40Action(Dataset):
         x_min, y_min, x_max, y_max = bbox
         if x_max <= x_min:
             x_min, x_max = x_max, x_min  # Swap x_min and x_max
-
         if y_max <= y_min:
             y_min, y_max = y_max, y_min  # Swap y_min and y_max
 
@@ -246,7 +243,6 @@ class Stanford40Action(Dataset):
 
         if x_max > image_x:
             x_max = image_x
-
         if y_max > image_y:
             y_max = image_y
 

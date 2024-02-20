@@ -72,9 +72,9 @@ def get_dataset(dataset):
         val_dataset = Stanford40Action(root=root, transform=test_transform, split='test', augment_box=True, load_box=True)
     elif dataset == 'voc2012':
         root = 'Datasets/Voc2012'
-        train_dataset = VOCAction(root=root, transform=train_tranform, split='train', augment_box=True,
+        train_dataset = VOCAction(root=root, split='train', augment_box=True,
                                          load_box=True)
-        val_dataset = VOCAction(root=root, transform=test_transform, split='test', augment_box=True,
+        val_dataset = VOCAction(root=root, split='val', augment_box=True,
                                        load_box=True)
 
     return train_dataset, val_dataset
@@ -187,7 +187,9 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
 
 if __name__ == '__main__':
 
-    train_dataset, val_dataset = get_dataset('std40')
+    # train_dataset, val_dataset = get_dataset('std40')
+    train_dataset, val_dataset = get_dataset('voc2012')
+
     val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.3, 0.7])
 
     # # 10 percent of dataset

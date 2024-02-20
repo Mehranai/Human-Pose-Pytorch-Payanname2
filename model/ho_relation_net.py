@@ -68,22 +68,22 @@ class HORelationNet(nn.Module):
         # ROI Align for getting best Related features (14, 14)
         aligned_features_h = self.roi_align(intermediate_layer, [h_boxes])
         aligned_features_o = self.roi_align(intermediate_layer, [obj_boxes])
-        aligned_features_p = self.roi_align(intermediate_layer, [pose_boxes])
+        # aligned_features_p = self.roi_align(intermediate_layer, [pose_boxes])
 
         # (M, 1024, h, w) -> (M, 2048, h, w)
         top_features_h = self.top_features(aligned_features_h)
         top_features_o = self.top_features(aligned_features_o)
-        top_features_p = self.top_features(aligned_features_p)
+        # top_features_p = self.top_features(aligned_features_p)
 
         # (M, 2048, h, w) -> (M, 2048)
         top_features_h = self.global_avg_pool(top_features_h).squeeze()
         top_features_o = self.global_avg_pool(top_features_o).squeeze()
-        top_features_p = self.global_avg_pool(top_features_p).squeeze()
+        # top_features_p = self.global_avg_pool(top_features_p).squeeze()
 
         # (M, 1024)
         top_feat_h = self.fc(top_features_h)
         top_feat_o = self.fc_ctx(top_features_o)
-        top_feat_p = self.fc_pose(top_features_p)
+        # top_feat_p = self.fc_pose(top_features_p)
 
         # # Relation Module
         # relation_feat, relation_ctx_feat, relation_pose_feat = \
