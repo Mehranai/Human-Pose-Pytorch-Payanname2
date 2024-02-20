@@ -1,5 +1,6 @@
 from utils import AverageMeter
 from lib.stanford40_dataset import Stanford40Action
+from lib.pascal_voc_dataset import VOCAction
 from model.ho_relation_net import horelation_resnet50_v1d_st40
 
 import time
@@ -65,13 +66,16 @@ def get_dataset(dataset):
         transforms.ToTensor()
     ])
 
-    if dataset=='std40':
-        root= 'Datasets/Stanford40'
+    if dataset == 'std40':
+        root = 'Datasets/Stanford40'
         train_dataset = Stanford40Action(root=root, transform=train_tranform, split='train', augment_box=True, load_box=True)
         val_dataset = Stanford40Action(root=root, transform=test_transform, split='test', augment_box=True, load_box=True)
-    else:
-        train_dataset= ''
-        val_dataset= ''
+    elif dataset == 'voc2012':
+        root = 'Datasets/Voc2012'
+        train_dataset = VOCAction(root=root, transform=train_tranform, split='train', augment_box=True,
+                                         load_box=True)
+        val_dataset = VOCAction(root=root, transform=test_transform, split='test', augment_box=True,
+                                       load_box=True)
 
     return train_dataset, val_dataset
 

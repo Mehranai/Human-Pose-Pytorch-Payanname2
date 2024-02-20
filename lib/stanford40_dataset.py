@@ -217,7 +217,7 @@ class Stanford40Action(Dataset):
         """Visualizes a single bounding box on the image"""
         x_min, y_min, x_max, y_max = np.array(bbox)
 
-        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=(0, 0, 255), thickness=thickness)
+        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=color, thickness=thickness)
         return img
 
     def visualize(self, image, bboxes):
