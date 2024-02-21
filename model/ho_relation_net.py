@@ -53,6 +53,8 @@ class HORelationNet(nn.Module):
         obj_boxes = obj_boxes[0]
         pose_boxes = pose_boxes[0]
 
+        # Give Box Coordinates to Roi Align in another Way ---->
+
         # m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
         # obj_boxes = torch.cat((m, obj_boxes), dim=1)
         #
