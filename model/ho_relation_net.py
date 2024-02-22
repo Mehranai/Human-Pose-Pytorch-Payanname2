@@ -53,8 +53,7 @@ class HORelationNet(nn.Module):
         obj_boxes = obj_boxes[0]
         pose_boxes = pose_boxes[0]
 
-        # Give Box Coordinates to Roi Align in another Way ---->
-
+        # # Give Box Coordinates to Roi Align in another Way ---->
         # m = torch.zeros((obj_boxes.shape[0], 1), device=self.device)
         # obj_boxes = torch.cat((m, obj_boxes), dim=1)
         #
@@ -165,7 +164,7 @@ def horelation_resnet50_v1d_voc(pretrained=False, transfer=None, params='', **kw
         top_features = model.backbone.body.layer4
 
         w, h = 14, 14
-        roi_align = torchvision.ops.RoIAlign(sampling_ratio=2, output_size=(w, h), spatial_scale=1.0)
+        roi_align = torchvision.ops.RoIAlign(sampling_ratio=-1, output_size=(w, h), spatial_scale=1.0)
         gap_layer = nn.AdaptiveAvgPool2d((1, 1))
 
         return HORelationNet(

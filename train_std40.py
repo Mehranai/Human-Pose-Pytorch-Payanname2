@@ -145,7 +145,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
 
   scheduler.step()
   accuracy = metric.compute()
-  print(f'Train Accuracy {accuracy}, LR={scheduler.get_last_lr()}\n')
+  print(f'Train Accuracy {accuracy.item():.2f}, LR={scheduler.get_last_lr()[0]}\n')
 
   #Valid Section
   valid_loss = AverageMeter()
@@ -177,7 +177,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
           vl_loader.set_postfix(loss=valid_loss.avg)
 
   accuracy_valid = metric.compute()
-  print(f'Loss Valid: {valid_loss.avg:.2f}, Valid Accuracy: {accuracy_valid:.2f}\n')
+  print(f'Loss Valid: {valid_loss.avg:.2f}, Valid Accuracy: {accuracy_valid.item():.2f}\n')
 
   if valid_loss.avg < best_loss:
     output_name = f'model{epoch}'
@@ -185,7 +185,7 @@ def train_one_epoch(model, train_loader, valid_loader, loss_fn, optimizer, sched
     best_loss = valid_loss.avg
     print('Model Saved!!\n')
 
-  return train_loss.avg, accuracy, valid_loss.avg, accuracy_valid, best_loss
+  return train_loss.avg, accuracy.item(), valid_loss.avg, accuracy_valid.item(), best_loss
 
 if __name__ == '__main__':
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.3, 0.7])
 
     # 10 percent of dataset
-    train_dataset, val_dataset, _ = torch.utils.data.random_split(train_dataset, [0.04, 0.02, 0.996])
+    train_dataset, val_dataset, _ = torch.utils.data.random_split(train_dataset, [0.04, 0.02, 0.94])
 
     train_loader = get_dataloader(train_dataset, batch_size= batch_size, num_workers=num_workers)
     valid_loader = get_dataloader(val_dataset, batch_size=batch_size, num_workers=num_workers)
